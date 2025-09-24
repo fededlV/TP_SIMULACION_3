@@ -1,1 +1,0 @@
-# llegada de pedidos, calendario, cola de backorders

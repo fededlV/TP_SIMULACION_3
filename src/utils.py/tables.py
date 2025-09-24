@@ -1,1 +1,0 @@
-# helpers para construir filas “visibles” (i..i+k)

@@ -1,1 +1,0 @@
-# validación del YAML (pydantic/voluptuous)

@@ -9,6 +9,7 @@ from src.ui.report_panel import ReportPanel
 from src.sim.engine import Engine
 from src.domain.costs import CostosCfg, Tramo
 from src.domain.policies import PolicyA, PolicyB
+from src.sim.runner import SimWorker
 
 
 HEADERS = [
@@ -36,6 +37,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.params.sim_btn.clicked.connect(self.simular)
 
+        # barra de progreso + cancelar
+        self.progress = QtWidgets.QProgressBar()
+        self.progress.setRange(0, 100)
+        self.cancel_btn = QtWidgets.QPushButton("Cancelar")
+        self.cancel_btn.setEnabled(False)
+        sb = QtWidgets.QToolBar()
+        sb.addWidget(self.progress)
+        sb.addWidget(self.cancel_btn)
+        self.addToolBar(QtCore.Qt.BottomToolBarArea, sb)
+
+        self.params.sim_btn.clicked.connect(self.simular)
+        self.cancel_btn.clicked.connect(self._cancelar)
+
+        self._worker = None  # referencia al worker
+
+    def _cancelar(self):
+        if self._worker and self._worker.isRunning():
+            self._worker.cancel()
+            self.cancel_btn.setEnabled(False)
+
     def _build_engine(self, merged: dict, cfg: Config) -> Engine:
         costos = CostosCfg(
             c_almacen_uni_dia=cfg.costos.almacenamiento_por_unidad_por_dia,
@@ -50,7 +71,7 @@ class MainWindow(QtWidgets.QMainWindow):
         eng = Engine(
             N_dias=merged['N_dias'],
             stock_inicial_dec=cfg.stock_inicial_decenas,
-            pedido_primer_dia=cfg.pedido_primer_dia,
+            pedido_primer_dia=merged['pedido_primer_dia'],
             demanda_values=merged['demanda']['valores'],
             demanda_probs=merged['demanda']['probabilidades'],
             demora_values=merged['demora']['valores'],
@@ -72,6 +93,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 'i_filas': overrides['i_filas'] or cfg.mostrar.i_filas,
                 'desde_j': overrides['desde_j'] or cfg.mostrar.desde_fila_j,
                 'politica': overrides['politica'] or cfg.politica,
+                'pedido_primer_dia': overrides['pedido_primer_dia'] if overrides['pedido_primer_dia'] is not None else cfg.pedido_primer_dia,
                 'demanda': overrides['demanda'],
                 'demora': overrides['demora'],
                 'costos_tramos': overrides['costos_tramos'],
@@ -100,67 +122,3 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error de simulación", str(e))
 
-""" class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("StockSim – Monte Carlo")
-
-        self.params = ParamsPanel()
-        self.table = QtWidgets.QTableView()
-        self.model = DictTableModel(HEADERS)
-        self.table.setModel(self.model)
-        self.report = ReportPanel()
-
-        tabs = QtWidgets.QTabWidget()
-        tabs.addTab(self.params, "Parámetros")
-        tabs.addTab(self.table, "Vector de estado")
-        tabs.addTab(self.report, "Informes")
-        self.setCentralWidget(tabs)
-
-        self.params.sim_btn.clicked.connect(self.simular)
-
-    def _build_engine(self, cfg: Config) -> Engine:
-        costos = CostosCfg(
-            c_almacen_uni_dia=cfg.costos.almacenamiento_por_unidad_por_dia,
-            c_ruptura_uni_dia=cfg.costos.ruptura_por_unidad_por_dia,
-            tramos=[Tramo(t.min_decenas, t.max_decenas, t.costo) for t in cfg.costos.pedido_por_tramo]
-        )
-        if self.params.politica.currentText() == 'A' or cfg.politica.upper() == 'A':
-            pol = PolicyA(cfg.politica_A.periodo_dias, cfg.politica_A.cantidad_decenas)
-        else:
-            pol = PolicyB(cfg.politica_B.periodo_dias, cfg.politica_B.ventana_historial_dias)
-
-        eng = Engine(
-            N_dias=self.params.dias.value() or cfg.N_dias,
-            stock_inicial_dec=cfg.stock_inicial_decenas,
-            pedido_primer_dia=cfg.pedido_primer_dia,
-            demanda_values=cfg.demanda.valores,
-            demanda_probs=cfg.demanda.probabilidades,
-            demora_values=cfg.demora.valores,
-            demora_probs=cfg.demora.probabilidades,
-            costos_cfg=costos,
-            policy=pol,
-            semilla=self.params.semilla.value() if self.params.semilla.value() else cfg.semilla,
-        )
-        return eng
-
-    def simular(self):
-        # cargar config
-        path = self.params.path_cfg.text().strip() or 'data/ejemplos/config_ejemplo.yaml'
-        cfg = Config.from_yaml(path)
-        eng = self._build_engine(cfg)
-
-        self.model.clear()
-        i = self.params.i_filas.value() or cfg.mostrar.i_filas
-        j = self.params.desde_j.value() or cfg.mostrar.desde_fila_j
-        last_row = None
-
-        # stream: sólo filas j..j+i-1 y la última
-        for row in eng.run():
-            last_row = asdict(row)
-            if j <= row.dia < j + i:
-                self.model.append_row(asdict(row))
-        if last_row:
-            self.model.append_row(last_row)
-            self.report.show_kpis(last_row)
- """

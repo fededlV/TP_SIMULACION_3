@@ -10,6 +10,9 @@ class DistributionTable(QtWidgets.QTableWidget):
         self.horizontalHeader().setStretchLastSection(True)
         self.verticalHeader().setVisible(False)
         self.setEditTriggers(QtWidgets.QAbstractItemView.AllEditTriggers)
+        self.pedido_inicial = QtWidgets.QCheckBox()
+        self.pedido_inicial.setChecked(True)  # por enunciado
+        
 
     def set_defaults(self, valores: List[int], probs: List[float]):
         self.setRowCount(max(len(valores), len(probs)))
@@ -88,11 +91,15 @@ class ParamsPanel(QtWidgets.QWidget):
         self.i_filas = QtWidgets.QSpinBox(); self.i_filas.setRange(1, 1000000); self.i_filas.setValue(30)
         self.desde_j = QtWidgets.QSpinBox(); self.desde_j.setRange(1, 10**9); self.desde_j.setValue(1)
         self.politica = QtWidgets.QComboBox(); self.politica.addItems(["A","B"])
+        self.pedido_inicial = QtWidgets.QCheckBox()
+        self.pedido_inicial.setChecked(True)  # por enunciado
         form.addRow("Semilla:", self.semilla)
         form.addRow("Tiempo a simular (días):", self.dias)
         form.addRow("Vector de estado – i filas:", self.i_filas)
         form.addRow("Desde fila j:", self.desde_j)
         form.addRow("Política:", self.politica)
+        form.addRow("Pedido inicial (día 1):", self.pedido_inicial)
+
 
         # Tablas de parámetros editables
         gb_dem = QtWidgets.QGroupBox("Demanda por día (decenas)")
@@ -143,6 +150,7 @@ class ParamsPanel(QtWidgets.QWidget):
             "i_filas": int(self.i_filas.value()),
             "desde_j": int(self.desde_j.value()),
             "politica": self.politica.currentText(),
+            "pedido_primer_dia": bool(self.pedido_inicial.isChecked()),
             "demanda": {"valores": valores_dem, "probabilidades": probs_dem},
             "demora":  {"valores": valores_del, "probabilidades": probs_del},
             "costos_tramos": tramos,
