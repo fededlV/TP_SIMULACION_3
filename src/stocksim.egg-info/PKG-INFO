@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: stocksim
+Version: 0.1.0
+Summary: Monte Carlo Stock Simulation (Policies A/B)
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: PySide6>=6.7
+Requires-Dist: pydantic>=2.7
+Requires-Dist: numpy>=1.26
+Dynamic: license-file

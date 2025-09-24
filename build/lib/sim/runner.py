@@ -1,0 +1,1 @@
+# wrapper para correr en QThread y emitir señales

@@ -1,0 +1,1 @@
+# inicialización de NumPy Generator (semillas)

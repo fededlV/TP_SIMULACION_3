@@ -1,0 +1,41 @@
+# ejemplo de parámetros (valores “en rojo”)
+
+semilla: 2025
+N_dias: 365
+mostrar:
+i_filas: 30
+desde_fila_j: 1
+
+
+stock_inicial_decenas: 20
+pedido_primer_dia: true
+politica: "A" # "A" o "B"
+
+
+demanda:
+valores_decenas: [0, 10, 20, 30, 40, 50]
+probabilidades: [0.05, 0.12, 0.18, 0.25, 0.22, 0.18]
+
+
+demora:
+valores_dias: [1, 2, 3, 4]
+probabilidades: [0.15, 0.20, 0.40, 0.25]
+
+
+costos:
+almacenamiento_por_unidad_por_dia: 30
+ruptura_por_unidad_por_dia: 40
+pedido_por_tramo:
+- {min_decenas: 0, max_decenas: 100, costo: 2000}
+- {min_decenas: 101, max_decenas: 200, costo: 2800}
+- {min_decenas: 201, max_decenas: null, costo: 3000}
+
+
+politica_A:
+periodo_dias: 7
+cantidad_decenas: 180
+
+
+politica_B:
+periodo_dias: 10
+ventana_historial_dias: 10
