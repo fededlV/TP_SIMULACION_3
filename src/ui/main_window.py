@@ -25,6 +25,87 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("StockSim – Monte Carlo")
 
         self.params = ParamsPanel()
+        self.table = QtWidgets.QTableView(); self.model = DictTableModel(HEADERS); self.table.setModel(self.model)
+        self.report = ReportPanel()
+
+        tabs = QtWidgets.QTabWidget()
+        tabs.addTab(self.params, "Parámetros")
+        tabs.addTab(self.table, "Vector de estado")
+        tabs.addTab(self.report, "Informes")
+        self.setCentralWidget(tabs)
+
+        self.params.sim_btn.clicked.connect(self.simular)
+
+    def _build_engine(self, merged: dict, cfg: Config) -> Engine:
+        costos = CostosCfg(
+            c_almacen_uni_dia=cfg.costos.almacenamiento_por_unidad_por_dia,
+            c_ruptura_uni_dia=cfg.costos.ruptura_por_unidad_por_dia,
+            tramos=[Tramo(t['min_decenas'], t['max_decenas'], t['costo']) for t in merged['costos_tramos']]
+        )
+        if merged['politica'] == 'A':
+            pol = PolicyA(cfg.politica_A.periodo_dias, cfg.politica_A.cantidad_decenas)
+        else:
+            pol = PolicyB(cfg.politica_B.periodo_dias, cfg.politica_B.ventana_historial_dias)
+
+        eng = Engine(
+            N_dias=merged['N_dias'],
+            stock_inicial_dec=cfg.stock_inicial_decenas,
+            pedido_primer_dia=cfg.pedido_primer_dia,
+            demanda_values=merged['demanda']['valores'],
+            demanda_probs=merged['demanda']['probabilidades'],
+            demora_values=merged['demora']['valores'],
+            demora_probs=merged['demora']['probabilidades'],
+            costos_cfg=costos,
+            policy=pol,
+            semilla=merged.get('semilla') or cfg.semilla,
+        )
+        return eng
+
+    def simular(self):
+        try:
+            overrides = self.params.get_overrides()
+            path = overrides.get('path_cfg')
+            cfg = Config.from_yaml(path)
+
+            merged = {
+                'N_dias': overrides['N_dias'] or cfg.N_dias,
+                'i_filas': overrides['i_filas'] or cfg.mostrar.i_filas,
+                'desde_j': overrides['desde_j'] or cfg.mostrar.desde_fila_j,
+                'politica': overrides['politica'] or cfg.politica,
+                'demanda': overrides['demanda'],
+                'demora': overrides['demora'],
+                'costos_tramos': overrides['costos_tramos'],
+                'semilla': overrides.get('semilla') or cfg.semilla,
+            }
+
+            eng = self._build_engine(merged, cfg)
+
+            self.model.clear()
+            i = merged['i_filas']
+            j = merged['desde_j']
+            last_row = None
+
+            for row in eng.run():
+                last_row = asdict(row)
+                if j <= row.dia < j + i:
+                    self.model.append_row(asdict(row))
+
+            if last_row:
+                self.model.append_row(last_row)  # agregar última fila N
+                # Mostrar informe con parámetros + KPIs
+                self.report.show_report(
+                    params={k: merged[k] for k in ('N_dias','i_filas','desde_j','politica','demanda','demora','costos_tramos')},
+                    last_row=last_row,
+                )
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error de simulación", str(e))
+
+""" class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("StockSim – Monte Carlo")
+
+        self.params = ParamsPanel()
         self.table = QtWidgets.QTableView()
         self.model = DictTableModel(HEADERS)
         self.table.setModel(self.model)
@@ -82,3 +163,4 @@ class MainWindow(QtWidgets.QMainWindow):
         if last_row:
             self.model.append_row(last_row)
             self.report.show_kpis(last_row)
+ """

@@ -22,6 +22,12 @@ class DictTableModel(QtCore.QAbstractTableModel):
         row = self._rows[index.row()]
         key = self._headers[index.column()]
         val = row.get(key, "")
+        # 4 decimales para aleatorios
+        if key in {"rnd_demanda", "rnd_demora"} and isinstance(val, (int, float)):
+            return f"{val:.4f}"
+        # fill_rate en porcentaje con 2 decimales | lo muestra en porcentaje 
+        if key == "fill_rate" and isinstance(val, (int, float)):
+            return f"{val*100:.2f}%"
         return f"{val}"
 
     def headerData(self, section, orientation, role):

@@ -45,9 +45,10 @@ class Engine:
         self.AC_pedidos = 0
 
     def _aplicar_llegadas(self, dia: int) -> int:
-        llegadas_dec = self.arrivals.pop(dia, 0)
+        """ llegadas_dec = self.arrivals.pop(dia, 0)
         self.stock += llegadas_dec
-        return llegadas_dec
+        return llegadas_dec """
+        return self.arrivals.pop(dia, 0)
 
     def run(self):
         for dia in range(1, self.N + 1):
@@ -131,5 +132,9 @@ class Engine:
             yield row
 
     def _agendar_llegada(self, dia: int, cantidad_dec: int, demora_dias: int):
-        llegada_dia = dia + demora_dias
-        self.arrivals[llegada_dia] = self.arrivals.get(llegada_dia, 0) + cantidad_dec
+        """ llegada_dia = dia + demora_dias
+        self.arrivals[llegada_dia] = self.arrivals.get(llegada_dia, 0) + cantidad_dec """
+        if cantidad_dec <= 0:
+            return
+        d = dia + demora_dias  # llega al INICIO del día d
+        self.arrivals[d] = self.arrivals.get(d, 0) + cantidad_dec
