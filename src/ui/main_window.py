@@ -1,13 +1,14 @@
 # ventana principal, menú, tabs
 from __future__ import annotations
 from PySide6 import QtCore, QtWidgets
-from config.loader import Config
-from ui.params_panel import ParamsPanel
-from ui.table_view import DictTableModel
-from ui.report_panel import ReportPanel
-from sim.engine import Engine
-from domain.costs import CostosCfg, Tramo
-from domain.policies import PolicyA, PolicyB
+from dataclasses import asdict
+from src.config.loader import Config
+from src.ui.params_panel import ParamsPanel
+from src.ui.table_view import DictTableModel
+from src.ui.report_panel import ReportPanel
+from src.sim.engine import Engine
+from src.domain.costs import CostosCfg, Tramo
+from src.domain.policies import PolicyA, PolicyB
 
 
 HEADERS = [
@@ -75,9 +76,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # stream: sólo filas j..j+i-1 y la última
         for row in eng.run():
-            last_row = row.as_dict()
+            last_row = asdict(row)
             if j <= row.dia < j + i:
-                self.model.append_row(row.as_dict())
+                self.model.append_row(asdict(row))
         if last_row:
             self.model.append_row(last_row)
             self.report.show_kpis(last_row)

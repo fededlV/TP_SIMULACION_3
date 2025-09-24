@@ -2,11 +2,10 @@
 from __future__ import annotations
 from typing import Dict, List
 import numpy as np
-
-from domain.state import Row, DECENA
-from domain.distributions import DiscreteSampler
-from domain.policies import PolicyA, PolicyB
-from domain.costs import CostosCfg, Tramo
+from src.domain.state import Row, DECENA
+from src.domain.distributions import DiscreteSampler
+from src.domain.policies import PolicyA, PolicyB
+from src.domain.costs import CostosCfg, Tramo
 
 class Engine:
     def __init__(
